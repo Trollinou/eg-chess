@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>eg-chess - Exemple basique</title>
+  <link rel="stylesheet" href="../src/vendor/cm-chessboard/assets/chessboard.css">
+  <link rel="stylesheet" href="../assets/eg-chess.css">
+ <link rel="stylesheet" href="../assets/styles/eg-chess.css">
+</head>
+<body>
+  <div class="eg-chess-container">
+    <h1>eg-chess - Exemple</h1>
+    <div id="board"></div>
+    
+    <div class="eg-chess-info">
+      <div class="eg-chess-status" id="status">Tour des blancs</div>
+      <div id="fen"></div>
+    </div>
+    
+    <div class="eg-chess-controls">
+      <button id="undo">Annuler</button>
+      <button id="reset">Nouvelle partie</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { EGChess } from '../dist/index.js';
+
+    const chess = new EGChess('#board', {
+      assetsUrl: '../node_modules/cm-chessboard/assets/'
+    });
+
+    const statusEl = document.getElementById('status');
+    const fenEl = document.getElementById('fen');
+
+    // Mise à jour de l'interface
+    function updateStatus() {
+      const turn = chess.turn() === 'w' ? 'blancs' : 'noirs';
+      
+      if (chess.isCheckmate()) {
+        statusEl.textContent = 'Échec et mat!';
+        statusEl.className = 'eg-chess-status checkmate';
+      } else if (chess.isDraw()) {
+        statusEl.textContent = 'Match nul!';
+        statusEl.className = 'eg-chess-status';
+      } else if (chess.isCheck()) {
+        statusEl.textContent = `Échec! Tour des ${turn}`;
+        statusEl.className = 'eg-chess-status check';
+      } else {
+        statusEl.textContent = `Tour des ${turn}`;
+        statusEl.className = 'eg-chess-status';
+      }
+      
+      fenEl.textContent = `FEN: ${chess.fen()}`;
+    }
+
+    // Callbacks
+    chess.onMove((move) => {
+      console.log('Coup joué:', move);
+      updateStatus();
+    });
+
+    chess.onCheckmate(() => {
+      console.log('Échec et mat!');
+      alert('Échec et mat!');
+    });
+
+    // Boutons
+    document.getElementById('undo').addEventListener('click', () => {
+      chess.undo();
+      updateStatus();
+    });
+
+    document.getElementById('reset').addEventListener('click', () => {
+      if (confirm('Nouvelle partie?')) {
+        chess.reset();
+        updateStatus();
+      }
+    });
+
+    // Initialisation
+    updateStatus();
+  </script>
+</body>
+</html>
