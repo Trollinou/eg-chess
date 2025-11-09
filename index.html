@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EGChess Test</title>
+    <link rel="stylesheet" href="dist/eg-chess.css">
+</head>
+<body>
+    <div id="board-container" style="width: 400px; height: 400px;"></div>
+    <script type="module">
+        import { EGChess } from './dist/eg-chess.js';
+        const boardContainer = document.getElementById('board-container');
+
+        // Default configuration works for this test page
+        const egChess = new EGChess(boardContainer);
+
+        // Example of overriding the assetsUrl
+        /*
+        const egChess = new EGChess(boardContainer, {
+            assetsUrl: 'path/to/your/assets'
+        });
+        */
+    </script>
+</body>
+</html>
