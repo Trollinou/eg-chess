@@ -1,4 +1,9 @@
-// Import cm-chessboard styles
+// Import cm-chessboard core styles
 @import "cm-chessboard/assets/chessboard.scss";
 
-// Add custom styles here
+// Import extension styles
+@import "cm-chessboard/assets/extensions/arrows/arrows.scss";
+@import "cm-chessboard/assets/extensions/markers/markers.scss";
+@import "cm-chessboard/assets/extensions/promotion-dialog/promotion-dialog.scss";
+
+// Custom styles can be added below

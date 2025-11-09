@@ -11,16 +11,8 @@
     <script type="module">
         import { EGChess } from './dist/eg-chess.js';
         const boardContainer = document.getElementById('board-container');
-
-        // Default configuration works for this test page
         const egChess = new EGChess(boardContainer);
-
-        // Example of overriding the assetsUrl
-        /*
-        const egChess = new EGChess(boardContainer, {
-            assetsUrl: 'path/to/your/assets'
-        });
-        */
+        window.egChess = egChess; // Expose for testing
     </script>
 </body>
 </html>
