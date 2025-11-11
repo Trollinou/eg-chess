@@ -5,7 +5,6 @@ import { PromotionDialog } from "../vendor/cm-chessboard/src/extensions/promotio
 import { Arrows } from "../vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
 import { RightClickAnnotator } from "../vendor/cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js";
 import { INPUT_EVENT_TYPE } from "../vendor/cm-chessboard/src/Chessboard.js";
-import { Accessibility } from "../vendor/cm-chessboard/src/extensions/accessibility/Accessibility.js";
 
 export class EGChess {
     constructor(container, config = {}) {
@@ -22,8 +21,7 @@ export class EGChess {
                 { class: Arrows },
                 { class: Markers, props: { autoMarkers: MARKER_TYPE.square } },
                 { class: PromotionDialog },
-                { class: RightClickAnnotator },
-                { class: Accessibility, props: { visuallyHidden: true } }
+                { class: RightClickAnnotator }
             ]
         });
 
@@ -56,7 +54,7 @@ export class EGChess {
 
     load(fen) {
         if (this.chess.load(fen)) {
-            this._updateBoard();
+            this.board.setPosition(this.chess.fen(), true);
         }
     }
 
@@ -102,50 +100,54 @@ export class EGChess {
         const tokens = fen.split(" ");
         tokens[1] = color;
         if (this.chess.load(tokens.join(" "))) {
-            this._updateBoard();
-        }
-    }
-
-    _updateBoard() {
-        this.board.setPosition(this.chess.fen());
-        this.emit('onMove', this.chess.history({ verbose: true }).pop());
-        if (this.chess.isGameOver()) {
-            this.emit('onGameOver');
+            this.board.setPosition(this.chess.fen(), true);
         }
     }
 
     inputHandler(event) {
         if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
-            const moves = this.chess.moves({square: event.square, verbose: true});
-            this.board.context.extensions.accessibility.showLegalMoves(moves);
+            const moves = this.chess.moves({ square: event.squareFrom, verbose: true });
+            this.board.addLegalMovesMarkers(moves);
             return moves.length > 0;
         } else if (event.type === INPUT_EVENT_TYPE.validateMoveInput) {
-            this.board.context.extensions.accessibility.hideLegalMoves();
-            const move = {from: event.squareFrom, to: event.squareTo, promotion: event.promotion};
-            const result = this.chess.move(move);
-            if (result) {
-                this.board.state.moveInputProcess.then(() => {
-                    this._updateBoard();
-                });
-            } else {
-                const possibleMoves = this.chess.moves({ square: event.squareFrom, verbose: true });
-                for (const possibleMove of possibleMoves) {
-                    if (possibleMove.promotion && possibleMove.to === event.squareTo) {
-                        this.board.showPromotionDialog(event.squareTo, this.chess.turn(), (promoResult) => {
-                            if (promoResult && promoResult.piece) {
-                                this.chess.move({ from: event.squareFrom, to: event.squareTo, promotion: promoResult.piece.charAt(1) });
-                                this._updateBoard();
-                            } else {
-                                this.board.setPosition(this.chess.fen());
+            const moves = this.chess.moves({ square: event.squareFrom, verbose: true });
+            return moves.some(move => move.to === event.squareTo);
+        } else if (event.type === INPUT_EVENT_TYPE.moveInputFinished) {
+            this.board.removeLegalMovesMarkers();
+            if (event.legalMove) {
+                const piece = this.chess.get(event.squareFrom);
+                const isPromotion = piece && piece.type === 'p' &&
+                    ((piece.color === 'w' && event.squareTo[1] === '8') ||
+                     (piece.color === 'b' && event.squareTo[1] === '1'));
+
+                if (isPromotion) {
+                    this.board.showPromotionDialog(event.squareTo, piece.color, (result) => {
+                        if (result) {
+                            this.chess.move({
+                                from: event.squareFrom,
+                                to: event.squareTo,
+                                promotion: result.piece.charAt(1)
+                            });
+                            this.board.setPosition(this.chess.fen());
+                            if (this.chess.isGameOver()) {
+                                this.emit('onGameOver');
                             }
-                        });
-                        return true;
+                        }
+                    });
+                } else {
+                    this.chess.move({ from: event.squareFrom, to: event.squareTo });
+                    this.board.setPosition(this.chess.fen());
+                    this.emit('onMove', this.chess.fen());
+                    if (this.chess.isGameOver()) {
+                        this.emit('onGameOver');
                     }
                 }
+            } else {
+                this.board.setPosition(this.chess.fen());
             }
-            return result;
-        } else if (event.type === INPUT_EVENT_TYPE.moveInputFinished) {
-            this.board.context.extensions.accessibility.hideLegalMoves();
+        } else if (event.type === INPUT_EVENT_TYPE.moveInputCanceled) {
+            this.board.removeLegalMovesMarkers();
+            this.board.setPosition(this.chess.fen());
         }
     }
 }

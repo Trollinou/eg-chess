@@ -13,6 +13,9 @@
         const boardContainer = document.getElementById('board-container');
         const egChess = new EGChess(boardContainer);
         window.egChess = egChess; // Expose for testing
+        egChess.on('onMove', (fen) => {
+            console.log('onMove event fired with FEN:', fen);
+        });
     </script>
 </body>
 </html>
