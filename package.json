@@ -1,46 +1,24 @@
 {
   "name": "eg-chess",
   "version": "1.0.0",
-  "description": "Bibliothèque JavaScript ESM encapsulant cm-chessboard et chess.js pour faciliter la manipulation d'un échiquier",
-  "type": "module",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-    },
-    "./styles": "./assets/styles/eg-chess.css"
-  },
-  "files": [
-    "dist",
-    "assets",
-    "src/vendor",
-    "README.md",
-    "LICENSE"
-  ],
+  "description": "A Javascript library for chess.",
+  "main": "dist/eg-chess.js",
   "scripts": {
-    "build": "node build.js",
-    "dev": "node build.js --watch",
-    "serve": "npx http-server . -p 8080"
+    "build": "npm run build:js && npm run build:css && npm run copy:assets",
+    "build:js": "esbuild src/eg-chess/EGChess.js --bundle --outfile=dist/eg-chess.js --format=esm",
+    "build:css": "sass --quiet-deps --silence-deprecation=import --load-path=src/vendor src/scss/eg-chess.scss dist/eg-chess.css",
+    "copy:assets": "cpx \"src/vendor/cm-chessboard/assets/**/*\" dist/assets",
+    "start": "http-server -c-1"
   },
   "keywords": [
-    "chess",
-    "chessboard",
-    "chess.js",
-    "cm-chessboard",
-    "esm",
-    "javascript"
+    "chess"
   ],
-  "author": "Votre Nom",
-  "license": "MIT",
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
+    "cpx": "^1.5.0",
     "esbuild": "^0.26.0",
-    "http-server": "^14.1.1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/votre-username/eg-chess.git"
+    "http-server": "^14.1.1",
+    "sass": "^1.93.3"
   }
 }
