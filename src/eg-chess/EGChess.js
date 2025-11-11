@@ -96,11 +96,12 @@ export class EGChess {
     }
 
     setTurn(color) {
-        const fen = this.chess.fen();
-        const tokens = fen.split(" ");
-        tokens[1] = color;
-        if (this.chess.load(tokens.join(" "))) {
+        try {
+            const result = this.chess.setTurn(color);
             this.board.setPosition(this.chess.fen(), true);
+            return result;
+        } catch (e) {
+            throw e;
         }
     }
 
