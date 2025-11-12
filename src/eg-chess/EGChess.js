@@ -1,33 +1,106 @@
 import { Chess } from "../vendor/chess.js/chess.js";
-import { Chessboard } from "../vendor/cm-chessboard/src/Chessboard.js";
+import { Chessboard, FEN } from "../vendor/cm-chessboard/src/Chessboard.js";
 import { MARKER_TYPE, Markers } from "../vendor/cm-chessboard/src/extensions/markers/Markers.js";
 import { PromotionDialog } from "../vendor/cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js";
 import { Arrows } from "../vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
 import { RightClickAnnotator } from "../vendor/cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js";
+import { PieceSelectionDialog, PIECE_SELECTION_DIALOG_RESULT_TYPE } from "./extensions/PieceSelectionDialog.js";
 import { INPUT_EVENT_TYPE } from "../vendor/cm-chessboard/src/Chessboard.js";
 
 export class EGChess {
-    constructor(container, config = {}) {
-        this.chess = new Chess(config.fen);
+    constructor(container, mode, options = {}) {
+        if (!mode) {
+            throw new Error("The 'mode' parameter is required.");
+        }
+
+        this.mode = mode;
+        this.options = options;
+        this.listeners = {};
+
         const defaultConfig = {
             assetsUrl: './dist/assets/'
         };
-        const finalConfig = { ...defaultConfig, ...config };
+        const finalConfig = { ...defaultConfig, ...options };
+
+        let initialFen = options.fen;
+
+        if (this.mode === 'build') {
+            this.chess = null; // No chess.js logic in build mode
+            if (!initialFen) {
+                initialFen = FEN.start;
+            }
+        } else { // 'match', 'analysis', 'train', etc.
+            this.chess = new Chess(options.fen);
+            initialFen = this.chess.fen();
+        }
 
         this.board = new Chessboard(container, {
-            position: this.chess.fen(),
+            position: initialFen,
             assetsUrl: finalConfig.assetsUrl,
             extensions: [
                 { class: Arrows },
                 { class: Markers, props: { autoMarkers: MARKER_TYPE.square } },
                 { class: PromotionDialog },
-                { class: RightClickAnnotator }
+                { class: RightClickAnnotator },
+                { class: PieceSelectionDialog }
             ]
         });
 
-        this.board.enableMoveInput(this.inputHandler.bind(this));
+        // Select the input handler based on the mode
+        if (this.mode === 'build') {
+            this.lastSquareClicked = null;
+            this.lastClickTimestamp = 0;
+            this.board.enableMoveInput(this.inputHandlerBuild.bind(this));
+        } else {
+            this.board.enableMoveInput(this.inputHandler.bind(this));
+        }
+    }
 
-        this.listeners = {};
+    // New input handler for "build" mode
+    inputHandlerBuild(event) {
+        if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
+            const now = new Date().getTime();
+            // Double click detection
+            if (this.lastSquareClicked === event.squareFrom && (now - this.lastClickTimestamp) < 300) {
+                this.board.setPiece(event.squareFrom, null); // Remove piece on double click
+                setTimeout(() => this.emit('onChange', this.getFen()));
+                this.lastSquareClicked = null;
+                return false; // Prevent drag
+            }
+            this.lastSquareClicked = event.squareFrom;
+            this.lastClickTimestamp = now;
+
+            const piece = this.board.getPiece(event.squareFrom);
+            if (piece) {
+                return true; // Allow dragging existing pieces
+            } else {
+                this.handlePieceSelection(event.squareFrom);
+                return false; // Prevent drag on empty square
+            }
+        } else if (event.type === INPUT_EVENT_TYPE.validateMoveInput) {
+            // Allow moving pieces to any square
+            return true;
+        } else if (event.type === INPUT_EVENT_TYPE.moveInputFinished) {
+            if (!event.legalMove) {
+                // Piece was dragged off the board, remove it
+                this.board.setPiece(event.squareFrom, null);
+            }
+            // Emit onChange for both successful moves and pieces dragged off the board
+            setTimeout(() => this.emit('onChange', this.getFen()));
+        }
+    }
+
+    handlePieceSelection(square) {
+        if (this.board.isPieceSelectionDialogShown()) {
+            return;
+        }
+        this.board.showPieceSelectionDialog(square, (result) => {
+            if (result.type === PIECE_SELECTION_DIALOG_RESULT_TYPE.pieceSelected) {
+                this.board.setPiece(result.square, result.piece);
+                setTimeout(() => this.emit('onChange', this.getFen()));
+            }
+            // Dialog closes automatically on selection or cancellation
+        });
     }
 
     on(eventName, callback) {
@@ -44,7 +117,17 @@ export class EGChess {
     }
 
     getFen() {
+        if (this.mode === 'build') {
+            const partialFen = this.board.getPosition();
+            return this.completeFen(partialFen);
+        }
         return this.chess.fen();
+    }
+
+    completeFen(partialFen) {
+        // Appends the default turn, castling rights, etc., to a FEN string
+        // that only contains piece placement.
+        return `${partialFen} w KQkq - 0 1`;
     }
 
     reset() {
@@ -103,6 +186,38 @@ export class EGChess {
         } catch (e) {
             throw e;
         }
+    }
+
+    // Arrow Methods
+    addArrows(arrows) {
+        this.board.removeArrows(); // Clear existing arrows before adding new ones
+        arrows.forEach(arrow => {
+            this.board.addArrow(arrow.from, arrow.to, arrow.type);
+        });
+    }
+
+    getArrows() {
+        return this.board.getArrows();
+    }
+
+    removeArrows() {
+        this.board.removeArrows();
+    }
+
+    // Marker Methods
+    addMarkers(markers) {
+        this.board.removeMarkers(); // Clear existing markers before adding new ones
+        markers.forEach(marker => {
+            this.board.addMarker(marker.square, marker.type);
+        });
+    }
+
+    getMarkers() {
+        return this.board.getMarkers();
+    }
+
+    removeMarkers() {
+        this.board.removeMarkers();
     }
 
     inputHandler(event) {

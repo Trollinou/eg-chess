@@ -5,10 +5,10 @@
  * @license MIT
  */
 
-import { Extension, EXTENSION_POINT } from '../../../../vendor/cm-chessboard/src/model/Extension.js';
-import { PIECE } from '../../../../vendor/cm-chessboard/src/Chessboard.js';
-import { Svg } from '../../../../vendor/cm-chessboard/src/lib/Svg.js';
-import { Utils } from '../../../../vendor/cm-chessboard/src/lib/Utils.js';
+import { Extension, EXTENSION_POINT } from '../../vendor/cm-chessboard/src/model/Extension.js';
+import { PIECE } from '../../vendor/cm-chessboard/src/Chessboard.js';
+import { Svg } from '../../vendor/cm-chessboard/src/lib/Svg.js';
+import { Utils } from '../../vendor/cm-chessboard/src/lib/Utils.js';
 
 const DISPLAY_STATE = {
     hidden: 'hidden',
