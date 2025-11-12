@@ -62,12 +62,7 @@ export class PieceSelectionDialog extends Extension {
     showPieceSelectionDialog(square, callback) {
         this.state.dialogParams.square = square;
         this.state.callback = callback;
-        this.setDisplayState(DISPLAY_STATE.displayRequested);
-        setTimeout(() => {
-            this.chessboard.view.positionsAnimationTask.then(() => {
-                this.setDisplayState(DISPLAY_STATE.shown);
-            });
-        });
+        this.setDisplayState(DISPLAY_STATE.shown);
     }
 
     /**

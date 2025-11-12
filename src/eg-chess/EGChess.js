@@ -62,11 +62,10 @@ export class EGChess {
             const now = new Date().getTime();
             // Double click detection
             if (this.lastSquareClicked === event.squareFrom && (now - this.lastClickTimestamp) < 300) {
-                this.board.setPiece(event.squareFrom, null); // Remove piece on double click
-                setTimeout(() => this.emit('onChange', this.getFen()));
-                this.lastSquareClicked = null;
+                this.isDoubleClick = true; // Flag for cancellation handler
                 return false; // Prevent drag
             }
+            this.isDoubleClick = false;
             this.lastSquareClicked = event.squareFrom;
             this.lastClickTimestamp = now;
 
@@ -81,11 +80,17 @@ export class EGChess {
             // Allow moving pieces to any square
             return true;
         } else if (event.type === INPUT_EVENT_TYPE.moveInputFinished) {
-            if (!event.legalMove) {
-                // Piece was dragged off the board, remove it
+            // This event now only handles successful moves
+            setTimeout(() => this.emit('onChange', this.getFen()));
+        } else if (event.type === INPUT_EVENT_TYPE.moveInputCanceled) {
+            // Handle piece removal here (both double-click and drag-off-board)
+            if (this.isDoubleClick) {
+                this.board.setPiece(event.squareFrom, null);
+                this.isDoubleClick = false; // Reset flag
+            } else if (event.squareFrom) { // squareFrom is null if it's not a drag cancel
+                // This indicates a piece was dragged off the board
                 this.board.setPiece(event.squareFrom, null);
             }
-            // Emit onChange for both successful moves and pieces dragged off the board
             setTimeout(() => this.emit('onChange', this.getFen()));
         }
     }
