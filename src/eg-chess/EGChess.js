@@ -51,8 +51,17 @@ export class EGChess {
             this.lastSquareClicked = null;
             this.lastClickTimestamp = 0;
             this.board.enableMoveInput(this.inputHandlerBuild.bind(this));
+            this.board.enableSquareSelect(this.handleSquareSelect.bind(this));
         } else {
             this.board.enableMoveInput(this.inputHandler.bind(this));
+        }
+    }
+
+    // Handler for single clicks on squares in "build" mode
+    handleSquareSelect(event) {
+        const piece = this.board.getPiece(event.square);
+        if (!piece) {
+            this.handlePieceSelection(event.square);
         }
     }
 
@@ -69,13 +78,8 @@ export class EGChess {
             this.lastSquareClicked = event.squareFrom;
             this.lastClickTimestamp = now;
 
-            const piece = this.board.getPiece(event.squareFrom);
-            if (piece) {
-                return true; // Allow dragging existing pieces
-            } else {
-                this.handlePieceSelection(event.squareFrom);
-                return false; // Prevent drag on empty square
-            }
+            // In build mode, we only want to handle moves of existing pieces here
+            return !!this.board.getPiece(event.squareFrom);
         } else if (event.type === INPUT_EVENT_TYPE.validateMoveInput) {
             // Allow moving pieces to any square
             return true;
