@@ -51,23 +51,21 @@ export class EGChess {
             this.lastSquareClicked = null;
             this.lastClickTimestamp = 0;
             this.board.enableMoveInput(this.inputHandlerBuild.bind(this));
-            this.board.enableSquareSelect(this.handleSquareSelect.bind(this));
         } else {
             this.board.enableMoveInput(this.inputHandler.bind(this));
-        }
-    }
-
-    // Handler for single clicks on squares in "build" mode
-    handleSquareSelect(event) {
-        const piece = this.board.getPiece(event.square);
-        if (!piece) {
-            this.handlePieceSelection(event.square);
         }
     }
 
     // New input handler for "build" mode
     inputHandlerBuild(event) {
         if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
+            const piece = this.board.getPiece(event.squareFrom);
+            if (!piece) {
+                // No piece on the square, show the selection dialog
+                this.handlePieceSelection(event.squareFrom);
+                return false; // Prevent move input
+            }
+
             const now = new Date().getTime();
             // Double click detection
             if (this.lastSquareClicked === event.squareFrom && (now - this.lastClickTimestamp) < 300) {
@@ -78,8 +76,8 @@ export class EGChess {
             this.lastSquareClicked = event.squareFrom;
             this.lastClickTimestamp = now;
 
-            // In build mode, we only want to handle moves of existing pieces here
-            return !!this.board.getPiece(event.squareFrom);
+            // Piece exists, allow move input
+            return true;
         } else if (event.type === INPUT_EVENT_TYPE.validateMoveInput) {
             // Allow moving pieces to any square
             return true;
