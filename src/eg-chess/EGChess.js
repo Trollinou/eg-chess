@@ -106,7 +106,6 @@ export class EGChess {
                 this.board.setPiece(result.square, result.piece);
                 setTimeout(() => this.emit('onChange', this.getFen()));
             }
-            // Dialog closes automatically on selection or cancellation
         });
     }
 
