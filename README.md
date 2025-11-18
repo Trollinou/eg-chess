@@ -65,11 +65,25 @@ egChess.on('onGameOver', () => {
 ### Constructeur
 
 \`\`\`javascript
-new EGChess(container, [config])
+new EGChess(container, mode, [options])
 \`\`\`
 
 -   `container` : L'élément HTML dans lequel l'échiquier doit être rendu.
--   `config` (facultatif) : Un objet de configuration. Actuellement, il prend en charge la propriété `fen` pour initialiser le plateau avec une position FEN spécifique.
+-   `mode` : Le mode de fonctionnement de l'échiquier. Les valeurs possibles sont :
+    -   `'build'`: Permet de construire librement une position.
+    -   `'match'`: Pour jouer une partie standard (par défaut).
+    -   `'analysis'`: Pour analyser une position.
+    -   `'train'`: Pour des exercices d'entraînement.
+-   `options` (facultatif) : Un objet de configuration. Il peut contenir :
+    -   `fen`: Une chaîne FEN pour initialiser l'échiquier avec une position spécifique.
+
+### Mode "Build"
+
+En mode "build", vous pouvez manipuler l'échiquier des manières suivantes :
+-   **Ajouter une pièce**: Cliquez sur une case vide pour ouvrir une boîte de dialogue et sélectionner une pièce à ajouter.
+-   **Supprimer une pièce**: Double-cliquez sur une pièce pour la retirer de l'échiquier.
+-   **Déplacer une pièce**: Faites glisser une pièce d'une case à une autre.
+-   **Supprimer une pièce par glisser-déposer**: Faites glisser une pièce en dehors de l'échiquier pour la supprimer.
 
 ### Méthodes
 
@@ -87,11 +101,24 @@ new EGChess(container, [config])
 -   `isThreefoldRepetition()`: Renvoie `true` si la position actuelle est apparue trois fois.
 -   `setTurn(color)`: Définit le camp dont c'est le tour de jouer (`'w'` pour les blancs, `'b'` pour les noirs).
 
+#### Méthodes pour les flèches (Arrows)
+
+-   `addArrows(arrows)`: Ajoute plusieurs flèches à l'échiquier. `arrows` est un tableau d'objets, chacun avec `from`, `to` et `type`.
+-   `getArrows()`: Renvoie toutes les flèches actuellement sur l'échiquier.
+-   `removeArrows()`: Supprime toutes les flèches de l'échiquier.
+
+#### Méthodes pour les marqueurs (Markers)
+
+-   `addMarkers(markers)`: Ajoute plusieurs marqueurs à l'échiquier. `markers` est un tableau d'objets, chacun avec `square` et `type`.
+-   `getMarkers()`: Renvoie tous les marqueurs actuellement sur l'échiquier.
+-   `removeMarkers()`: Supprime tous les marqueurs de l'échiquier.
+
 ### Événements
 
 -   `on(eventName, callback)`: S'abonne à un événement.
-    -   `'onMove'`: Se déclenche après qu'un coup valide a été joué. Le `callback` reçoit l'objet du coup.
+    -   `'onMove'`: Se déclenche après qu'un coup valide a été joué. Le `callback` reçoit la FEN de la nouvelle position.
     -   `'onGameOver'`: Se déclenche lorsque la partie est terminée (échec et mat, pat, nulle).
+    -   `'onChange'`: **(Mode "build" uniquement)** Se déclenche chaque fois que la position de l'échiquier est modifiée. Le `callback` reçoit la FEN de la nouvelle position.
 
 ## Licence
 

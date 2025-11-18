@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EGChess "Build" Mode Example</title>
+    <link rel="stylesheet" href="dist/eg-chess.css">
+    <style>
+        body { font-family: sans-serif; }
+        #board-container { width: 400px; height: 400px; }
+        #fen-container { margin-top: 10px; }
+        #fen-input { width: 100%; box-sizing: border-box; }
+    </style>
+</head>
+<body>
+    <h1>EGChess "Build" Mode Example</h1>
+    <p>Click on a square to add a piece, double-click a piece to remove it, or drag pieces to move them.</p>
+    <div id="board-container"></div>
+    <div id="fen-container">
+        <label for="fen-input">Current FEN:</label>
+        <input type="text" id="fen-input" readonly>
+    </div>
+
+    <script type="module">
+        import { EGChess } from './dist/eg-chess.js';
+
+        const boardContainer = document.getElementById('board-container');
+        const fenInput = document.getElementById('fen-input');
+
+        // Initialize EGChess in "build" mode
+        const egChess = new EGChess(boardContainer, 'build');
+
+        // Function to update the FEN input
+        const updateFen = () => {
+            const fen = egChess.getFen();
+            fenInput.value = fen;
+        };
+
+        // Listen for the 'onChange' event
+        egChess.on('onChange', (fen) => {
+            console.log('onChange event fired with FEN:', fen);
+            updateFen();
+        });
+
+        // Set the initial FEN value
+        updateFen();
+    </script>
+</body>
+</html>
