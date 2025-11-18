@@ -51,21 +51,42 @@ export class EGChess {
             this.lastSquareClicked = null;
             this.lastClickTimestamp = 0;
             this.board.enableMoveInput(this.inputHandlerBuild.bind(this));
+            // Add a direct event listener for left-clicks, inspired by RightClickAnnotator
+            this.board.context.addEventListener("pointerdown", this.buildModePointerDownHandler.bind(this));
         } else {
             this.board.enableMoveInput(this.inputHandler.bind(this));
         }
     }
 
+    // Custom pointer down handler for build mode to detect clicks on empty squares
+    buildModePointerDownHandler(event) {
+        if (event.button !== 0) { // Left-click only
+            return;
+        }
+        const square = this.findSquareFromEvent(event);
+        if (square) {
+            const piece = this.board.getPiece(square);
+            if (!piece) {
+                // This is a left click on an empty square, show the dialog
+                event.preventDefault(); // Prevent cm-chessboard's move input from starting
+                this.handlePieceSelection(square);
+            }
+        }
+    }
+
+    // Helper method to find the square from a pointer event
+    findSquareFromEvent(event) {
+        const target = event.target;
+        if (target.getAttribute && target.getAttribute("data-square")) {
+            return target.getAttribute("data-square");
+        }
+        const el = target.closest && target.closest("[data-square]");
+        return el ? el.getAttribute("data-square") : undefined;
+    }
+
     // New input handler for "build" mode
     inputHandlerBuild(event) {
         if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
-            const piece = this.board.getPiece(event.squareFrom);
-            if (!piece) {
-                // No piece on the square, show the selection dialog
-                this.handlePieceSelection(event.squareFrom);
-                return false; // Prevent move input
-            }
-
             const now = new Date().getTime();
             // Double click detection
             if (this.lastSquareClicked === event.squareFrom && (now - this.lastClickTimestamp) < 300) {
