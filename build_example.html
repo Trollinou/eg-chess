@@ -10,6 +10,10 @@
         #board-container { width: 400px; height: 400px; }
         #fen-container { margin-top: 10px; }
         #fen-input { width: 100%; box-sizing: border-box; }
+        #arrow-container { margin-top: 10px; }
+        #arrow-input { width: 100%; box-sizing: border-box; }
+        #marker-container { margin-top: 10px; }
+        #marker-input { width: 100%; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -20,12 +24,22 @@
         <label for="fen-input">Current FEN:</label>
         <input type="text" id="fen-input" readonly>
     </div>
+    <div id="arrow-container">
+        <label for="arrow-input">Current Arrow:</label>
+        <input type="text" id="arrow-input" readonly>
+    </div>
+    <div id="marker-container">
+        <label for="marker-input">Current Marker:</label>
+        <input type="text" id="marker-input" readonly>
+    </div>
 
     <script type="module">
         import { EGChess } from './dist/eg-chess.js';
 
         const boardContainer = document.getElementById('board-container');
         const fenInput = document.getElementById('fen-input');
+        const arrowInput = document.getElementById('arrow-input');
+        const markerInput = document.getElementById('marker-input');
 
         // Initialize EGChess in "build" mode
         const egChess = new EGChess(boardContainer, 'build');
@@ -33,7 +47,11 @@
         // Function to update the FEN input
         const updateFen = () => {
             const fen = egChess.getFen();
+			const arrows = egChess.getArrows();
+			const markers = egChess.getMarkers();
             fenInput.value = fen;
+			arrowInput.value = JSON.stringify(arrows);
+			markerInput.value = JSON.stringify(markers);
         };
 
         // Listen for the 'onChange' event
