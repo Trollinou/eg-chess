@@ -6,7 +6,7 @@
  */
 
 import { Extension, EXTENSION_POINT } from '../../vendor/cm-chessboard/src/model/Extension.js';
-import { PIECE } from '../../vendor/cm-chessboard/src/Chessboard.js';
+import { PIECE, COLOR, FEN } from '../../vendor/cm-chessboard/src/Chessboard.js';
 import { Svg } from '../../vendor/cm-chessboard/src/lib/Svg.js';
 import { Utils } from '../../vendor/cm-chessboard/src/lib/Utils.js';
 
@@ -30,9 +30,13 @@ export class PieceSelectionDialog extends Extension {
     /**
      * @constructor
      * @param {object} chessboard - The chessboard instance.
+     * @param {object} props - The properties passed to the extension.
      */
-    constructor(chessboard) {
+    constructor(chessboard, props) {
         super(chessboard);
+        this.props = props;
+        this.egChess = this.props.egChess; // Reference to the main EGChess instance
+
         this.registerExtensionPoint(EXTENSION_POINT.afterRedrawBoard, this.extensionPointRedrawBoard.bind(this));
         chessboard.showPieceSelectionDialog = this.showPieceSelectionDialog.bind(this);
         chessboard.isPieceSelectionDialogShown = this.isPieceSelectionDialogShown.bind(this);
@@ -102,6 +106,42 @@ export class PieceSelectionDialog extends Extension {
     }
 
     /**
+     * Draws an action button in the dialog.
+     * @param {string} action - The action identifier.
+     * @param {string} iconUrl - The URL of the SVG icon.
+     * @param {object} point - The coordinates where the button should be drawn.
+     * @private
+     */
+    drawActionButton(action, iconUrl, point) {
+        const squareWidth = this.chessboard.view.squareWidth;
+        const squareHeight = this.chessboard.view.squareHeight;
+
+        // Create a group for the button
+        const buttonGroup = Svg.addElement(this.pieceSelectionDialogGroup, 'g', {
+            'data-action': action,
+            class: 'piece-selection-dialog-button'
+        });
+
+        Svg.addElement(buttonGroup, 'rect', {
+            x: point.x,
+            y: point.y,
+            width: squareWidth,
+            height: squareHeight,
+            // The class is on the group, so no need to repeat it here for event handling
+        });
+
+        const padding = squareWidth * 0.15; // 15% padding
+        Svg.addElement(buttonGroup, 'image', {
+            href: iconUrl,
+            x: point.x + padding,
+            y: point.y + padding,
+            width: squareWidth - 2 * padding,
+            height: squareHeight - 2 * padding,
+        });
+    }
+
+
+    /**
      * Redraws the dialog.
      * @private
      */
@@ -117,19 +157,19 @@ export class PieceSelectionDialog extends Extension {
             const whitePieces = [PIECE.wp, PIECE.wb, PIECE.wn, PIECE.wr, PIECE.wq, PIECE.wk];
             const blackPieces = [PIECE.bp, PIECE.bb, PIECE.bn, PIECE.br, PIECE.bq, PIECE.bk];
 
-            // Adjust position to stay within the board boundaries
+            // Dialog dimensions now include 2 extra rows for action buttons
             const dialogWidth = squareWidth * 2;
+            const dialogHeight = squareHeight * (6 + 2); // 6 rows for pieces, 2 for actions
+
+            // Adjust position to stay within the board boundaries
             let dialogX = squarePoint.x;
             if (dialogX + dialogWidth > this.chessboard.view.width) {
                 dialogX = this.chessboard.view.width - dialogWidth;
             }
 
-            const dialogHeight = squareHeight * 6;
             let dialogY = squarePoint.y;
             if (dialogY + dialogHeight > this.chessboard.view.height) {
-                // Try to align the dialog's bottom with the square's bottom
                 dialogY = squarePoint.y + squareHeight - dialogHeight;
-                // If it overflows the top, align it to the top
                 if (dialogY < 0) {
                     dialogY = 0;
                 }
@@ -143,18 +183,24 @@ export class PieceSelectionDialog extends Extension {
                 class: 'piece-selection-dialog',
             });
 
+            // Draw piece selection buttons
             for (let i = 0; i < 6; i++) {
-                // White pieces
                 this.drawPieceButton(whitePieces[i], {
                     x: dialogX,
                     y: dialogY + i * squareHeight,
                 });
-                // Black pieces
                 this.drawPieceButton(blackPieces[i], {
                     x: dialogX + squareWidth,
                     y: dialogY + i * squareHeight,
                 });
             }
+
+            // Draw action buttons below the pieces
+            const actionsY = dialogY + 6 * squareHeight;
+            this.drawActionButton('rotate', './assets/svg/rotate_board.svg', { x: dialogX, y: actionsY });
+            this.drawActionButton('fen', './assets/svg/fen_button.svg', { x: dialogX + squareWidth, y: actionsY });
+            this.drawActionButton('clear', './assets/svg/empty_board.svg', { x: dialogX, y: actionsY + squareHeight });
+            this.drawActionButton('start', './assets/svg/board_start.svg', { x: dialogX + squareWidth, y: actionsY + squareHeight });
         }
     }
 
@@ -163,20 +209,48 @@ export class PieceSelectionDialog extends Extension {
      * @param {Event} event - The click event.
      * @private
      */
-    pieceSelectionDialogOnClickPiece(event) {
-        if (event.button !== 2) {
-            if (event.target.dataset.piece) {
-                if (this.state.callback) {
-                    this.state.callback({
-                        type: PIECE_SELECTION_DIALOG_RESULT_TYPE.pieceSelected,
-                        square: this.state.dialogParams.square,
-                        piece: event.target.dataset.piece,
-                    });
-                }
-                this.setDisplayState(DISPLAY_STATE.hidden);
-            } else {
-                this.pieceSelectionDialogOnCancel(event);
+    async pieceSelectionDialogOnClickPiece(event) {
+        if (event.button === 2) {
+            return; // Ignore right-clicks
+        }
+
+        const target = event.target;
+        const pieceElement = target.closest('[data-piece]');
+        const actionElement = target.closest('[data-action]');
+
+        if (pieceElement) {
+            if (this.state.callback) {
+                this.state.callback({
+                    type: PIECE_SELECTION_DIALOG_RESULT_TYPE.pieceSelected,
+                    square: this.state.dialogParams.square,
+                    piece: pieceElement.dataset.piece,
+                });
             }
+            this.setDisplayState(DISPLAY_STATE.hidden);
+        } else if (actionElement) {
+            const action = actionElement.dataset.action;
+            switch (action) {
+                case 'rotate':
+                    const newOrientation = this.chessboard.getOrientation() === COLOR.white ? COLOR.black : COLOR.white;
+                    await this.chessboard.setOrientation(newOrientation, false);
+                    break;
+                case 'fen':
+                    const fen = prompt("Enter FEN string:", this.egChess.getFen());
+                    if (fen) {
+                        await this.egChess.load(fen);
+                    }
+                    break;
+                case 'clear':
+                    await this.egChess.load("8/8/8/8/8/8/8/8 w - - 0 1");
+                    break;
+                case 'start':
+                    await this.egChess.load(FEN.start);
+                    break;
+            }
+            // Close dialog after action
+            this.setDisplayState(DISPLAY_STATE.hidden);
+        } else {
+            this.pieceSelectionDialogOnCancel(event);
         }
     }
 

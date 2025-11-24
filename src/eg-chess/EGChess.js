@@ -43,13 +43,19 @@ export class EGChess {
                     cssClass: "default",
                     showCoordinates: true,
                     borderType: BORDER_TYPE.frame,
-                    aspectRatio: 0.98
+                    aspectRatio: 0.98,
+                    animationDuration: 0 // Disable all animations in build mode
                 },
                 extensions: [
                     { class: Arrows },
                     { class: Markers, props: { autoMarkers: MARKER_TYPE.frame } },
                     { class: RightClickAnnotator },
-                    { class: PieceSelectionDialog }
+                    {
+                        class: PieceSelectionDialog,
+                        props: {
+                            egChess: this // Pass the EGChess instance to the extension
+                        }
+                    }
                 ]
             });
         } else {
@@ -71,8 +77,9 @@ export class EGChess {
             this.lastSquareClicked = null;
             this.lastClickTimestamp = 0;
             this.board.enableMoveInput(this.inputHandlerBuild.bind(this));
-            // Add a direct event listener for left-clicks, inspired by RightClickAnnotator
+            // Add listeners for build mode interactions
             this.board.context.addEventListener("pointerdown", this.buildModePointerDownHandler.bind(this));
+            this.board.context.addEventListener("mouseup", this.buildModeMouseUpHandler.bind(this));
         } else {
             this.board.enableMoveInput(this.inputHandler.bind(this));
         }
@@ -94,6 +101,14 @@ export class EGChess {
         }
     }
 
+    // Custom mouse up handler for build mode to detect right-click annotations
+    buildModeMouseUpHandler(event) {
+        if (event.button === 2) { // Right-click
+            // Use a short timeout to ensure the annotator has finished its work before we get the FEN
+            setTimeout(() => this.emit('onChange', this.getFen()));
+        }
+    }
+
     // Helper method to find the square from a pointer event
     findSquareFromEvent(event) {
         const target = event.target;
@@ -105,7 +120,7 @@ export class EGChess {
     }
 
     // New input handler for "build" mode
-    inputHandlerBuild(event) {
+    async inputHandlerBuild(event) {
         if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
             const now = new Date().getTime();
             // Double click detection
@@ -128,11 +143,11 @@ export class EGChess {
         } else if (event.type === INPUT_EVENT_TYPE.moveInputCanceled) {
             // Handle piece removal here (both double-click and drag-off-board)
             if (this.isDoubleClick) {
-                this.board.setPiece(event.squareFrom, null);
+                await this.board.setPiece(event.squareFrom, null, false);
                 this.isDoubleClick = false; // Reset flag
             } else if (event.squareFrom) { // squareFrom is null if it's not a drag cancel
                 // This indicates a piece was dragged off the board
-                this.board.setPiece(event.squareFrom, null);
+                await this.board.setPiece(event.squareFrom, null, false);
             }
             setTimeout(() => this.emit('onChange', this.getFen()));
         }
@@ -142,9 +157,9 @@ export class EGChess {
         if (this.board.isPieceSelectionDialogShown()) {
             return;
         }
-        this.board.showPieceSelectionDialog(square, (result) => {
+        this.board.showPieceSelectionDialog(square, async (result) => {
             if (result.type === PIECE_SELECTION_DIALOG_RESULT_TYPE.pieceSelected) {
-                this.board.setPiece(result.square, result.piece);
+                await this.board.setPiece(result.square, result.piece, false);
                 setTimeout(() => this.emit('onChange', this.getFen()));
             }
         });
@@ -165,32 +180,58 @@ export class EGChess {
 
     getFen() {
         if (this.mode === 'build') {
-            const partialFen = this.board.getPosition();
-            return this.completeFen(partialFen);
+            const piecePlacement = this.board.getPosition();
+            const pieces = this.board.getPieces();
+
+            const currentFenParts = this.board.state.fen ? this.board.state.fen.split(" ") : ["", "w", "-", "-", "0", "1"];
+            const activeColor = currentFenParts[1];
+
+            let castlingRights = "";
+            if (pieces.e1 === 'wK' && pieces.h1 === 'wR') castlingRights += 'K';
+            if (pieces.e1 === 'wK' && pieces.a1 === 'wR') castlingRights += 'Q';
+            if (pieces.e8 === 'bK' && pieces.h8 === 'bR') castlingRights += 'k';
+            if (pieces.e8 === 'bK' && pieces.a8 === 'bR') castlingRights += 'q';
+            if (castlingRights === "") {
+                castlingRights = "-";
+            }
+
+            const enPassant = currentFenParts[3];
+            const halfMove = currentFenParts[4];
+            const fullMove = currentFenParts[5];
+
+            return `${piecePlacement} ${activeColor} ${castlingRights} ${enPassant} ${halfMove} ${fullMove}`;
         }
         return this.chess.fen();
     }
 
-    completeFen(partialFen) {
-        // Appends the default turn, castling rights, etc., to a FEN string
-        // that only contains piece placement.
-        return `${partialFen} w KQkq - 0 1`;
-    }
-
     reset() {
+        if (this.mode === 'build') {
+            this.load(FEN.start);
+            return;
+        }
         this.chess.reset();
         this.board.setPosition(this.chess.fen());
     }
 
-    load(fen) {
+    async load(fen) {
+        if (this.mode === 'build') {
+            await this.board.setPosition(fen, false);
+            this.emit('onChange', this.getFen());
+            return;
+        }
+
         if (this.chess.load(fen)) {
-            this.board.setPosition(this.chess.fen(), true);
+            await this.board.setPosition(this.chess.fen(), true);
         }
     }
 
-    undo() {
+    async undo() {
+        if (this.mode === 'build') {
+            // Undo is not applicable in build mode
+            return;
+        }
         this.chess.undo();
-        this.board.setPosition(this.chess.fen());
+        await this.board.setPosition(this.chess.fen());
     }
 
     history() {

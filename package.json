@@ -7,7 +7,7 @@
     "build": "npm run build:js && npm run build:css && npm run copy:assets",
     "build:js": "esbuild src/eg-chess/EGChess.js --bundle --outfile=dist/eg-chess.js --format=esm",
     "build:css": "sass --quiet-deps --silence-deprecation=import --load-path=src/vendor src/scss/eg-chess.scss dist/eg-chess.css",
-    "copy:assets": "cpx2 \"src/vendor/cm-chessboard/assets/**/*\" dist/assets",
+    "copy:assets": "npx cpx2 \"src/vendor/cm-chessboard/assets/**/*\" dist/assets",
     "start": "http-server -c-1"
   },
   "keywords": [
