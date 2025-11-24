@@ -49,6 +49,7 @@ export class PieceSelectionDialog extends Extension {
                 square: null,
             },
         };
+        this.isProcessingClick = false;
     }
 
     /**
@@ -210,49 +211,52 @@ export class PieceSelectionDialog extends Extension {
      * @private
      */
     async pieceSelectionDialogOnClick(event) {
-        if (event.button === 2) {
-            return; // Ignore right-clicks
+        if (event.button === 2 || this.isProcessingClick) {
+            return;
         }
+        this.isProcessingClick = true;
         event.preventDefault();
 
         const target = event.target;
         const pieceElement = target.closest('[data-piece]');
         const actionElement = target.closest('[data-action]');
 
-        if (pieceElement) {
-            if (this.state.callback) {
-                this.state.callback({
-                    type: PIECE_SELECTION_DIALOG_RESULT_TYPE.pieceSelected,
-                    square: this.state.dialogParams.square,
-                    piece: pieceElement.dataset.piece,
-                });
+        try {
+            if (pieceElement) {
+                if (this.state.callback) {
+                    this.state.callback({
+                        type: PIECE_SELECTION_DIALOG_RESULT_TYPE.pieceSelected,
+                        square: this.state.dialogParams.square,
+                        piece: pieceElement.dataset.piece,
+                    });
+                }
+                this.setDisplayState(DISPLAY_STATE.hidden);
+            } else if (actionElement) {
+                const action = actionElement.dataset.action;
+                switch (action) {
+                    case 'rotate':
+                        const newOrientation = this.chessboard.getOrientation() === COLOR.white ? COLOR.black : COLOR.white;
+                        await this.egChess.setOrientation(newOrientation);
+                        break;
+                    case 'fen':
+                        const fen = prompt("Enter FEN string:", this.egChess.getFen());
+                        if (fen) {
+                            await this.egChess.load(fen);
+                        }
+                        break;
+                    case 'clear':
+                        await this.egChess.load("8/8/8/8/8/8/8/8 w - - 0 1");
+                        break;
+                    case 'start':
+                        await this.egChess.load(FEN.start);
+                        break;
+                }
+                this.setDisplayState(DISPLAY_STATE.hidden);
+            } else {
+                this.pieceSelectionDialogOnCancel(event);
             }
-            this.setDisplayState(DISPLAY_STATE.hidden);
-        } else if (actionElement) {
-            const action = actionElement.dataset.action;
-            switch (action) {
-                case 'rotate':
-                    const newOrientation = this.chessboard.getOrientation() === COLOR.white ? COLOR.black : COLOR.white;
-                    // Use the new centralized method in EGChess
-                    await this.egChess.setOrientation(newOrientation);
-                    break;
-                case 'fen':
-                    const fen = prompt("Enter FEN string:", this.egChess.getFen());
-                    if (fen) {
-                        await this.egChess.load(fen);
-                    }
-                    break;
-                case 'clear':
-                    await this.egChess.load("8/8/8/8/8/8/8/8 w - - 0 1");
-                    break;
-                case 'start':
-                    await this.egChess.load(FEN.start);
-                    break;
-            }
-            // Close dialog after action
-            this.setDisplayState(DISPLAY_STATE.hidden);
-        } else {
-            this.pieceSelectionDialogOnCancel(event);
+        } finally {
+            this.isProcessingClick = false;
         }
     }
 
