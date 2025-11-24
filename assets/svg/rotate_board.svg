@@ -1,0 +1,36 @@
+<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <!-- Symbole de rotation d'échiquier -->
+  <!-- Cercle de base -->
+  <circle cx="20" cy="20" r="18" fill="none" stroke="black" stroke-width="1.5"/>
+  
+  <!-- Flèche courbe de rotation (arc + pointe) -->
+  <!-- Arc de cercle pour la rotation -->
+  <path d="M 8 20 A 12 12 0 0 1 32 20" fill="none" stroke="black" stroke-width="1.5" stroke-linecap="round"/>
+  
+  <!-- Pointe de flèche -->
+  <polygon points="34,20 30,18 31,24" fill="black" stroke="black" stroke-width="0.5"/>
+  
+  <!-- Petit échiquier stylisé au centre -->
+  <g transform="translate(20, 20)">
+    <!-- Cases minimales pour représenter un échiquier -->
+    <rect x="-4" y="-4" width="2" height="2" fill="black"/>
+    <rect x="-2" y="-4" width="2" height="2" fill="white" stroke="black" stroke-width="0.3"/>
+    <rect x="0" y="-4" width="2" height="2" fill="black"/>
+    <rect x="2" y="-4" width="2" height="2" fill="white" stroke="black" stroke-width="0.3"/>
+    
+    <rect x="-4" y="-2" width="2" height="2" fill="white" stroke="black" stroke-width="0.3"/>
+    <rect x="-2" y="-2" width="2" height="2" fill="black"/>
+    <rect x="0" y="-2" width="2" height="2" fill="white" stroke="black" stroke-width="0.3"/>
+    <rect x="2" y="-2" width="2" height="2" fill="black"/>
+    
+    <rect x="-4" y="0" width="2" height="2" fill="black"/>
+    <rect x="-2" y="0" width="2" height="2" fill="white" stroke="black" stroke-width="0.3"/>
+    <rect x="0" y="0" width="2" height="2" fill="black"/>
+    <rect x="2" y="0" width="2" height="2" fill="white" stroke="black" stroke-width="0.3"/>
+    
+    <rect x="-4" y="2" width="2" height="2" fill="white" stroke="black" stroke-width="0.3"/>
+    <rect x="-2" y="2" width="2" height="2" fill="black"/>
+    <rect x="0" y="2" width="2" height="2" fill="white" stroke="black" stroke-width="0.3"/>
+    <rect x="2" y="2" width="2" height="2" fill="black"/>
+  </g>
+</svg>

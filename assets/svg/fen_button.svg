@@ -1,0 +1,8 @@
+<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <!-- Bouton FEN avec fond et texte -->
+  <!-- Fond arrondi -->
+  <rect x="2" y="8" width="36" height="24" rx="4" ry="4" fill="none" stroke="black" stroke-width="1.5"/>
+  
+  <!-- Texte "FEN" -->
+  <text x="20" y="26" font-family="Arial, sans-serif" font-size="16" font-weight="bold" text-anchor="middle" fill="black">FEN</text>
+</svg>
