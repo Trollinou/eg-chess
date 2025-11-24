@@ -1,11 +1,10 @@
 import { Chess } from "../vendor/chess.js/chess.js";
-import { Chessboard, FEN } from "../vendor/cm-chessboard/src/Chessboard.js";
+import { Chessboard, FEN, INPUT_EVENT_TYPE, COLOR, BORDER_TYPE } from "../vendor/cm-chessboard/src/Chessboard.js";
 import { MARKER_TYPE, Markers } from "../vendor/cm-chessboard/src/extensions/markers/Markers.js";
-import { PromotionDialog } from "../vendor/cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js";
-import { Arrows } from "../vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
+import { ARROW_TYPE, Arrows } from "../vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
 import { RightClickAnnotator } from "../vendor/cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js";
+import { PromotionDialog } from "../vendor/cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js";
 import { PieceSelectionDialog, PIECE_SELECTION_DIALOG_RESULT_TYPE } from "./extensions/PieceSelectionDialog.js";
-import { INPUT_EVENT_TYPE } from "../vendor/cm-chessboard/src/Chessboard.js";
 
 export class EGChess {
     constructor(container, mode, options = {}) {
@@ -34,17 +33,38 @@ export class EGChess {
             initialFen = this.chess.fen();
         }
 
-        this.board = new Chessboard(container, {
-            position: initialFen,
-            assetsUrl: finalConfig.assetsUrl,
-            extensions: [
-                { class: Arrows },
-                { class: Markers, props: { autoMarkers: MARKER_TYPE.square } },
-                { class: PromotionDialog },
-                { class: RightClickAnnotator },
-                { class: PieceSelectionDialog }
-            ]
-        });
+        if (this.mode === 'build') {
+            this.board = new Chessboard(container, {
+                position: initialFen,
+                responsive: true,
+                assetsUrl: finalConfig.assetsUrl,
+                assetsCache: false,
+                style: {
+                    cssClass: "default",
+                    showCoordinates: true,
+                    borderType: BORDER_TYPE.frame,
+                    aspectRatio: 0.98
+                },
+                extensions: [
+                    { class: Arrows },
+                    { class: Markers, props: { autoMarkers: MARKER_TYPE.frame } },
+                    { class: RightClickAnnotator },
+                    { class: PieceSelectionDialog }
+                ]
+            });
+        } else {
+            this.board = new Chessboard(container, {
+                position: initialFen,
+                responsive: true,
+                assetsUrl: finalConfig.assetsUrl,
+                extensions: [
+                    { class: Arrows },
+                    { class: Markers, props: { autoMarkers: MARKER_TYPE.frame } },
+                    { class: RightClickAnnotator },
+                    { class: PromotionDialog }
+                ]
+            });
+        }
 
         // Select the input handler based on the mode
         if (this.mode === 'build') {
