@@ -181,16 +181,16 @@ export class EGChess {
     getFen() {
         if (this.mode === 'build') {
             const piecePlacement = this.board.getPosition();
-            const pieces = this.board.getPieces();
 
             const currentFenParts = this.board.state.fen ? this.board.state.fen.split(" ") : ["", "w", "-", "-", "0", "1"];
             const activeColor = currentFenParts[1];
 
             let castlingRights = "";
-            if (pieces.e1 === 'wK' && pieces.h1 === 'wR') castlingRights += 'K';
-            if (pieces.e1 === 'wK' && pieces.a1 === 'wR') castlingRights += 'Q';
-            if (pieces.e8 === 'bK' && pieces.h8 === 'bR') castlingRights += 'k';
-            if (pieces.e8 === 'bK' && pieces.a8 === 'bR') castlingRights += 'q';
+            // Check castling rights using the correct getPiece(square) method
+            if (this.board.getPiece('e1') === 'wK' && this.board.getPiece('h1') === 'wR') castlingRights += 'K';
+            if (this.board.getPiece('e1') === 'wK' && this.board.getPiece('a1') === 'wR') castlingRights += 'Q';
+            if (this.board.getPiece('e8') === 'bK' && this.board.getPiece('h8') === 'bR') castlingRights += 'k';
+            if (this.board.getPiece('e8') === 'bK' && this.board.getPiece('a8') === 'bR') castlingRights += 'q';
             if (castlingRights === "") {
                 castlingRights = "-";
             }
