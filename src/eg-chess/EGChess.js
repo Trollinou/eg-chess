@@ -225,6 +225,33 @@ export class EGChess {
         }
     }
 
+    async setOrientation(color) {
+        // Guard against re-running if already in the correct orientation
+        if (this.board.getOrientation() === color) {
+            return;
+        }
+
+        if (this.mode === 'build') {
+            const currentFen = this.getFen();
+            const fenParts = currentFen.split(" ");
+            // Toggle the active color
+            fenParts[1] = fenParts[1] === 'w' ? 'b' : 'w';
+            const newFen = fenParts.join(" ");
+
+            // Set the new position which updates the board's internal FEN state
+            await this.board.setPosition(newFen, false);
+            // Visually flip the board
+            await this.board.setOrientation(color, false);
+
+            // Manually emit the change event to update the UI
+            this.emit('onChange', this.getFen());
+
+        } else {
+            // For other modes, just flip the board visually without changing the FEN logic
+            await this.board.setOrientation(color);
+        }
+    }
+
     async undo() {
         if (this.mode === 'build') {
             // Undo is not applicable in build mode

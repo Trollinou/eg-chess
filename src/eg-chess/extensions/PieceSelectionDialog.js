@@ -197,10 +197,10 @@ export class PieceSelectionDialog extends Extension {
 
             // Draw action buttons below the pieces
             const actionsY = dialogY + 6 * squareHeight;
-            this.drawActionButton('rotate', './assets/svg/rotate_board.svg', { x: dialogX, y: actionsY });
-            this.drawActionButton('fen', './assets/svg/fen_button.svg', { x: dialogX + squareWidth, y: actionsY });
-            this.drawActionButton('clear', './assets/svg/empty_board.svg', { x: dialogX, y: actionsY + squareHeight });
-            this.drawActionButton('start', './assets/svg/board_start.svg', { x: dialogX + squareWidth, y: actionsY + squareHeight });
+            this.drawActionButton('rotate', '/assets/svg/rotate_board.svg', { x: dialogX, y: actionsY });
+            this.drawActionButton('fen', '/assets/svg/fen_button.svg', { x: dialogX + squareWidth, y: actionsY });
+            this.drawActionButton('clear', '/assets/svg/empty_board.svg', { x: dialogX, y: actionsY + squareHeight });
+            this.drawActionButton('start', '/assets/svg/board_start.svg', { x: dialogX + squareWidth, y: actionsY + squareHeight });
         }
     }
 
@@ -209,10 +209,11 @@ export class PieceSelectionDialog extends Extension {
      * @param {Event} event - The click event.
      * @private
      */
-    async pieceSelectionDialogOnClickPiece(event) {
+    async pieceSelectionDialogOnClick(event) {
         if (event.button === 2) {
             return; // Ignore right-clicks
         }
+        event.preventDefault();
 
         const target = event.target;
         const pieceElement = target.closest('[data-piece]');
@@ -232,7 +233,8 @@ export class PieceSelectionDialog extends Extension {
             switch (action) {
                 case 'rotate':
                     const newOrientation = this.chessboard.getOrientation() === COLOR.white ? COLOR.black : COLOR.white;
-                    await this.chessboard.setOrientation(newOrientation, false);
+                    // Use the new centralized method in EGChess
+                    await this.egChess.setOrientation(newOrientation);
                     break;
                 case 'fen':
                     const fen = prompt("Enter FEN string:", this.egChess.getFen());
@@ -291,11 +293,12 @@ export class PieceSelectionDialog extends Extension {
     setDisplayState(displayState) {
         this.state.displayState = displayState;
         if (displayState === DISPLAY_STATE.shown) {
+            // Use 'click' instead of 'pointerdown' to avoid double firing
             this.clickDelegate = Utils.delegate(
                 this.chessboard.view.svg,
-                'pointerdown',
+                'click',
                 '*',
-                this.pieceSelectionDialogOnClickPiece.bind(this)
+                this.pieceSelectionDialogOnClick.bind(this)
             );
             this.contextMenuListener = this.contextMenu.bind(this);
             this.chessboard.view.svg.addEventListener('contextmenu', this.contextMenuListener);
