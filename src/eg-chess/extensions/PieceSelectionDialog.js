@@ -233,6 +233,7 @@ export class PieceSelectionDialog extends Extension {
                 this.setDisplayState(DISPLAY_STATE.hidden);
             } else if (actionElement) {
                 const action = actionElement.dataset.action;
+                let hideDialog = true;
                 switch (action) {
                     case 'rotate':
                         const newOrientation = this.chessboard.getOrientation() === COLOR.white ? COLOR.black : COLOR.white;
@@ -240,9 +241,14 @@ export class PieceSelectionDialog extends Extension {
                         break;
                     case 'fen':
                         const fen = prompt("Enter FEN string:", this.egChess.getFen());
-                        if (fen) {
+                        if (fen === null) {
+                            // User canceled. Handle closing asynchronously and prevent the default closing.
+                            setTimeout(() => this.setDisplayState(DISPLAY_STATE.hidden), 0);
+                            hideDialog = false;
+                        } else if (fen) {
                             await this.egChess.load(fen);
                         }
+                        // If fen is an empty string, we just fall through and close the dialog.
                         break;
                     case 'clear':
                         await this.egChess.load("8/8/8/8/8/8/8/8 w - - 0 1");
@@ -251,7 +257,9 @@ export class PieceSelectionDialog extends Extension {
                         await this.egChess.load(FEN.start);
                         break;
                 }
-                this.setDisplayState(DISPLAY_STATE.hidden);
+                if (hideDialog) {
+                    this.setDisplayState(DISPLAY_STATE.hidden);
+                }
             } else {
                 this.pieceSelectionDialogOnCancel(event);
             }
