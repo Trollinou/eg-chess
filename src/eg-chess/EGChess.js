@@ -191,10 +191,10 @@ export class EGChess {
             const turn = this.board.getOrientation() === COLOR.white ? 'w' : 'b';
 
             let castlingRights = "";
-            if (this.board.getPiece('e1') === 'wK' && this.board.getPiece('h1') === 'wR') castlingRights += 'K';
-            if (this.board.getPiece('e1') === 'wK' && this.board.getPiece('a1') === 'wR') castlingRights += 'Q';
-            if (this.board.getPiece('e8') === 'bK' && this.board.getPiece('h8') === 'bR') castlingRights += 'k';
-            if (this.board.getPiece('e8') === 'bK' && this.board.getPiece('a8') === 'bR') castlingRights += 'q';
+            if (this.board.getPiece('e1') === 'wk' && this.board.getPiece('h1') === 'wr') castlingRights += 'K';
+            if (this.board.getPiece('e1') === 'wk' && this.board.getPiece('a1') === 'wr') castlingRights += 'Q';
+            if (this.board.getPiece('e8') === 'bk' && this.board.getPiece('h8') === 'br') castlingRights += 'k';
+            if (this.board.getPiece('e8') === 'bk' && this.board.getPiece('a8') === 'br') castlingRights += 'q';
             if (castlingRights === "") {
                 castlingRights = "-";
             }
