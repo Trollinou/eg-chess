@@ -28,6 +28,13 @@ export class EGChess {
             if (!initialFen) {
                 initialFen = FEN.start;
             }
+            // Initialize fenState for build mode
+            const fenParts = initialFen.split(' ');
+            this.fenState = {
+                enPassant: fenParts[3] || '-',
+                halfMove: parseInt(fenParts[4], 10) || 0,
+                fullMove: parseInt(fenParts[5], 10) || 1
+            };
         } else { // 'match', 'analysis', 'train', etc.
             this.chess = new Chess(options.fen);
             initialFen = this.chess.fen();
@@ -180,13 +187,10 @@ export class EGChess {
 
     getFen() {
         if (this.mode === 'build') {
-            const piecePlacement = this.board.getPosition();
-
-            const currentFenParts = this.board.state.fen ? this.board.state.fen.split(" ") : ["", "w", "-", "-", "0", "1"];
-            const activeColor = currentFenParts[1];
+            const position = this.board.getPosition();
+            const turn = this.board.getOrientation() === COLOR.white ? 'w' : 'b';
 
             let castlingRights = "";
-            // Check castling rights using the correct getPiece(square) method
             if (this.board.getPiece('e1') === 'wK' && this.board.getPiece('h1') === 'wR') castlingRights += 'K';
             if (this.board.getPiece('e1') === 'wK' && this.board.getPiece('a1') === 'wR') castlingRights += 'Q';
             if (this.board.getPiece('e8') === 'bK' && this.board.getPiece('h8') === 'bR') castlingRights += 'k';
@@ -195,11 +199,7 @@ export class EGChess {
                 castlingRights = "-";
             }
 
-            const enPassant = currentFenParts[3];
-            const halfMove = currentFenParts[4];
-            const fullMove = currentFenParts[5];
-
-            return `${piecePlacement} ${activeColor} ${castlingRights} ${enPassant} ${halfMove} ${fullMove}`;
+            return `${position} ${turn} ${castlingRights} ${this.fenState.enPassant} ${this.fenState.halfMove} ${this.fenState.fullMove}`;
         }
         return this.chess.fen();
     }
@@ -215,7 +215,22 @@ export class EGChess {
 
     async load(fen) {
         if (this.mode === 'build') {
-            await this.board.setPosition(fen, false);
+            const fenParts = fen.split(' ');
+            const position = fenParts[0];
+            const turn = fenParts[1];
+
+            // Update internal state
+            this.fenState.enPassant = fenParts[3] || '-';
+            this.fenState.halfMove = parseInt(fenParts[4], 10) || 0;
+            this.fenState.fullMove = parseInt(fenParts[5], 10) || 1;
+
+            // Update the board
+            await this.board.setPosition(position, false);
+            const newOrientation = turn === 'w' ? COLOR.white : COLOR.black;
+            if (this.board.getOrientation() !== newOrientation) {
+                await this.board.setOrientation(newOrientation, false);
+            }
+
             this.emit('onChange', this.getFen());
             return;
         }
@@ -232,20 +247,8 @@ export class EGChess {
         }
 
         if (this.mode === 'build') {
-            const currentFen = this.getFen();
-            const fenParts = currentFen.split(" ");
-            // Toggle the active color
-            fenParts[1] = fenParts[1] === 'w' ? 'b' : 'w';
-            const newFen = fenParts.join(" ");
-
-            // Set the new position which updates the board's internal FEN state
-            await this.board.setPosition(newFen, false);
-            // Visually flip the board
             await this.board.setOrientation(color, false);
-
-            // Manually emit the change event to update the UI
             this.emit('onChange', this.getFen());
-
         } else {
             // For other modes, just flip the board visually without changing the FEN logic
             await this.board.setOrientation(color);
