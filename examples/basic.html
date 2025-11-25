@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>eg-chess - Exemple basique</title>
-  <link rel="stylesheet" href="../src/vendor/cm-chessboard/assets/chessboard.css">
-  <link rel="stylesheet" href="../assets/eg-chess.css">
- <link rel="stylesheet" href="../assets/styles/eg-chess.css">
+  <link rel="stylesheet" href="../dist/eg-chess.css">
 </head>
 <body>
   <div class="eg-chess-container">
@@ -25,56 +23,67 @@
   </div>
 
   <script type="module">
-    import { EGChess } from '../dist/index.js';
+    import { EGChess } from '../dist/eg-chess.js';
 
-    const chess = new EGChess('#board', {
-      assetsUrl: '../node_modules/cm-chessboard/assets/'
+    const boardContainer = document.getElementById('board');
+    // We need to provide the 'match' mode and the correct assetsUrl
+    const chess = new EGChess(boardContainer, 'match', {
+        assetsUrl: '../dist/assets/'
     });
+    window.egChess = chess; // Expose for easier debugging
 
     const statusEl = document.getElementById('status');
     const fenEl = document.getElementById('fen');
 
     // Mise à jour de l'interface
     function updateStatus() {
-      const turn = chess.turn() === 'w' ? 'blancs' : 'noirs';
-      
-      if (chess.isCheckmate()) {
-        statusEl.textContent = 'Échec et mat!';
-        statusEl.className = 'eg-chess-status checkmate';
-      } else if (chess.isDraw()) {
-        statusEl.textContent = 'Match nul!';
-        statusEl.className = 'eg-chess-status';
-      } else if (chess.isCheck()) {
-        statusEl.textContent = `Échec! Tour des ${turn}`;
-        statusEl.className = 'eg-chess-status check';
-      } else {
-        statusEl.textContent = `Tour des ${turn}`;
-        statusEl.className = 'eg-chess-status';
-      }
-      
-      fenEl.textContent = `FEN: ${chess.fen()}`;
+        // Access the internal chess.js instance for game state
+        const game = chess.chess;
+        const turn = game.turn() === 'w' ? 'blancs' : 'noirs';
+
+        if (game.isCheckmate()) {
+            statusEl.textContent = 'Échec et mat!';
+            statusEl.className = 'eg-chess-status checkmate';
+        } else if (game.isDraw()) {
+            statusEl.textContent = 'Match nul!';
+            statusEl.className = 'eg-chess-status';
+        } else if (game.isCheck()) {
+            statusEl.textContent = `Échec! Tour des ${turn}`;
+            statusEl.className = 'eg-chess-status check';
+        } else {
+            statusEl.textContent = `Tour des ${turn}`;
+            statusEl.className = 'eg-chess-status';
+        }
+
+        // Use the public getFen() method
+        fenEl.textContent = `FEN: ${chess.getFen()}`;
     }
 
     // Callbacks
-    chess.onMove((move) => {
-      console.log('Coup joué:', move);
+    chess.on('onMove', (fen) => {
+      console.log('Coup joué, nouveau FEN:', fen);
       updateStatus();
     });
 
-    chess.onCheckmate(() => {
-      console.log('Échec et mat!');
-      alert('Échec et mat!');
+    chess.on('onGameOver', () => {
+        console.log('Partie terminée!');
+        // We can add a more specific message if needed by checking the game state
+        if (chess.chess.isCheckmate()) {
+            alert('Échec et mat!');
+        } else {
+            alert('Partie terminée!');
+        }
     });
 
     // Boutons
-    document.getElementById('undo').addEventListener('click', () => {
-      chess.undo();
+    document.getElementById('undo').addEventListener('click', async () => {
+      await chess.undo();
       updateStatus();
     });
 
-    document.getElementById('reset').addEventListener('click', () => {
+    document.getElementById('reset').addEventListener('click', async () => {
       if (confirm('Nouvelle partie?')) {
-        chess.reset();
+        await chess.reset();
         updateStatus();
       }
     });
