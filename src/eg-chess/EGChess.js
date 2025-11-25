@@ -211,13 +211,13 @@ export class EGChess {
         return this.chess.fen();
     }
 
-    reset() {
+    async reset() {
         if (this.mode === 'build') {
-            this.load(FEN.start);
+            await this.load(FEN.start);
             return;
         }
         this.chess.reset();
-        this.board.setPosition(this.chess.fen());
+        await this.board.setPosition(this.chess.fen());
     }
 
     async load(fen) {
@@ -303,10 +303,10 @@ export class EGChess {
         return this.chess.isThreefoldRepetition();
     }
 
-    setTurn(color) {
+    async setTurn(color) {
         try {
             const result = this.chess.setTurn(color);
-            this.board.setPosition(this.chess.fen(), true);
+            await this.board.setPosition(this.chess.fen(), true);
             return result;
         } catch (e) {
             throw e;
@@ -345,7 +345,7 @@ export class EGChess {
         this.board.removeMarkers();
     }
 
-    inputHandler(event) {
+    async inputHandler(event) {
         if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
             const moves = this.chess.moves({ square: event.squareFrom, verbose: true });
             this.board.addLegalMovesMarkers(moves);
@@ -362,14 +362,14 @@ export class EGChess {
                      (piece.color === 'b' && event.squareTo[1] === '1'));
 
                 if (isPromotion) {
-                    this.board.showPromotionDialog(event.squareTo, piece.color, (result) => {
+                    this.board.showPromotionDialog(event.squareTo, piece.color, async (result) => {
                         if (result) {
                             this.chess.move({
                                 from: event.squareFrom,
                                 to: event.squareTo,
                                 promotion: result.piece.charAt(1)
                             });
-                            this.board.setPosition(this.chess.fen());
+                            await this.board.setPosition(this.chess.fen());
                             if (this.chess.isGameOver()) {
                                 this.emit('onGameOver');
                             }
@@ -377,18 +377,18 @@ export class EGChess {
                     });
                 } else {
                     this.chess.move({ from: event.squareFrom, to: event.squareTo });
-                    this.board.setPosition(this.chess.fen());
+                    await this.board.setPosition(this.chess.fen());
                     this.emit('onMove', this.chess.fen());
                     if (this.chess.isGameOver()) {
                         this.emit('onGameOver');
                     }
                 }
             } else {
-                this.board.setPosition(this.chess.fen());
+                await this.board.setPosition(this.chess.fen());
             }
         } else if (event.type === INPUT_EVENT_TYPE.moveInputCanceled) {
             this.board.removeLegalMovesMarkers();
-            this.board.setPosition(this.chess.fen());
+            await this.board.setPosition(this.chess.fen());
         }
     }
 }
