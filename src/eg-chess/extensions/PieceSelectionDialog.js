@@ -55,8 +55,8 @@ export class PieceSelectionDialog extends Extension {
     /**
      * Closes the piece selection dialog.
      */
-    closePieceSelectionDialog() {
-        this.setDisplayState(DISPLAY_STATE.hidden);
+    async closePieceSelectionDialog() {
+        await this.setDisplayState(DISPLAY_STATE.hidden);
     }
 
     /**
@@ -64,10 +64,10 @@ export class PieceSelectionDialog extends Extension {
      * @param {string} square - The square where the dialog should appear.
      * @param {function} callback - The callback function to execute when a piece is selected or the dialog is canceled.
      */
-    showPieceSelectionDialog(square, callback) {
+    async showPieceSelectionDialog(square, callback) {
         this.state.dialogParams.square = square;
         this.state.callback = callback;
-        this.setDisplayState(DISPLAY_STATE.shown);
+        await this.setDisplayState(DISPLAY_STATE.shown);
     }
 
     /**
@@ -230,10 +230,9 @@ export class PieceSelectionDialog extends Extension {
                         piece: pieceElement.dataset.piece,
                     });
                 }
-                this.setDisplayState(DISPLAY_STATE.hidden);
+                await this.setDisplayState(DISPLAY_STATE.hidden);
             } else if (actionElement) {
                 const action = actionElement.dataset.action;
-                let hideDialog = true;
                 switch (action) {
                     case 'rotate':
                         const newOrientation = this.chessboard.getOrientation() === COLOR.white ? COLOR.black : COLOR.white;
@@ -241,14 +240,9 @@ export class PieceSelectionDialog extends Extension {
                         break;
                     case 'fen':
                         const fen = prompt("Enter FEN string:", this.egChess.getFen());
-                        if (fen === null) {
-                            // User canceled. Handle closing asynchronously and prevent the default closing.
-                            setTimeout(() => this.setDisplayState(DISPLAY_STATE.hidden), 0);
-                            hideDialog = false;
-                        } else if (fen) {
+                        if (fen) {
                             await this.egChess.load(fen);
                         }
-                        // If fen is an empty string, we just fall through and close the dialog.
                         break;
                     case 'clear':
                         await this.egChess.load("8/8/8/8/8/8/8/8 w - - 0 1");
@@ -257,11 +251,9 @@ export class PieceSelectionDialog extends Extension {
                         await this.egChess.load(FEN.start);
                         break;
                 }
-                if (hideDialog) {
-                    this.setDisplayState(DISPLAY_STATE.hidden);
-                }
+                await this.setDisplayState(DISPLAY_STATE.hidden);
             } else {
-                this.pieceSelectionDialogOnCancel(event);
+                await this.pieceSelectionDialogOnCancel(event);
             }
         } finally {
             this.isProcessingClick = false;
@@ -273,11 +265,11 @@ export class PieceSelectionDialog extends Extension {
      * @param {Event} event - The event that triggered the cancellation.
      * @private
      */
-    pieceSelectionDialogOnCancel(event) {
+    async pieceSelectionDialogOnCancel(event) {
         if (this.state.displayState === DISPLAY_STATE.shown) {
             event.preventDefault();
             event.stopImmediatePropagation();
-            this.setDisplayState(DISPLAY_STATE.hidden);
+            await this.setDisplayState(DISPLAY_STATE.hidden);
             if (this.state.callback) {
                 this.state.callback({ type: PIECE_SELECTION_DIALOG_RESULT_TYPE.canceled });
             }
@@ -289,20 +281,23 @@ export class PieceSelectionDialog extends Extension {
      * @param {Event} event - The context menu event.
      * @private
      */
-    contextMenu(event) {
+    async contextMenu(event) {
         event.preventDefault();
-        this.setDisplayState(DISPLAY_STATE.hidden);
+        await this.setDisplayState(DISPLAY_STATE.hidden);
         if (this.state.callback) {
             this.state.callback({ type: PIECE_SELECTION_DIALOG_RESULT_TYPE.canceled });
         }
     }
 
     /**
-     * Sets the display state of the dialog and adds or removes event listeners accordingly.
+     * Sets the display state of the dialog.
+     * Note: This function is async to introduce a microtask delay. This resolves a
+     * race condition with the synchronous `window.prompt()` which can cause click
+     * events to re-fire upon closing the prompt.
      * @param {string} displayState - The new display state.
      * @private
      */
-    setDisplayState(displayState) {
+    async setDisplayState(displayState) {
         this.state.displayState = displayState;
         if (displayState === DISPLAY_STATE.shown) {
             // Use 'click' instead of 'pointerdown' to avoid double firing
