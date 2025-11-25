@@ -83,6 +83,7 @@ export class EGChess {
         if (this.mode === 'build') {
             this.lastSquareClicked = null;
             this.lastClickTimestamp = 0;
+            this.isMovingPiece = false; // Add state variable
             this.board.enableMoveInput(this.inputHandlerBuild.bind(this));
             // Add listeners for build mode interactions
             this.board.context.addEventListener("pointerdown", this.buildModePointerDownHandler.bind(this));
@@ -94,6 +95,9 @@ export class EGChess {
 
     // Custom pointer down handler for build mode to detect clicks on empty squares
     buildModePointerDownHandler(event) {
+        if (this.isMovingPiece) { // Check state variable
+            return;
+        }
         if (event.button !== 0) { // Left-click only
             return;
         }
@@ -129,6 +133,7 @@ export class EGChess {
     // New input handler for "build" mode
     async inputHandlerBuild(event) {
         if (event.type === INPUT_EVENT_TYPE.moveInputStarted) {
+            this.isMovingPiece = true; // Set state to true
             const now = new Date().getTime();
             // Double click detection
             if (this.lastSquareClicked === event.squareFrom && (now - this.lastClickTimestamp) < 300) {
@@ -145,9 +150,11 @@ export class EGChess {
             // Allow moving pieces to any square
             return true;
         } else if (event.type === INPUT_EVENT_TYPE.moveInputFinished) {
+            this.isMovingPiece = false; // Reset state to false
             // This event now only handles successful moves
             setTimeout(() => this.emit('onChange', this.getFen()));
         } else if (event.type === INPUT_EVENT_TYPE.moveInputCanceled) {
+            this.isMovingPiece = false; // Reset state to false
             // Handle piece removal here (both double-click and drag-off-board)
             if (this.isDoubleClick) {
                 await this.board.setPiece(event.squareFrom, null, false);
