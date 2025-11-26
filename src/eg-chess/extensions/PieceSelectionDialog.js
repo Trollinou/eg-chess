@@ -5,7 +5,10 @@
  * @license MIT
  */
 
-import { Extension, EXTENSION_POINT, PIECE, COLOR, FEN, Svg, Utils } from 'cm-chessboard';
+import { Extension, EXTENSION_POINT } from 'cm-chessboard/src/model/Extension.js';
+import { PIECE, COLOR, FEN } from 'cm-chessboard';
+import { Svg } from 'cm-chessboard/src/lib/Svg.js';
+import { Utils } from 'cm-chessboard/src/lib/Utils.js';
 
 const DISPLAY_STATE = {
     hidden: 'hidden',

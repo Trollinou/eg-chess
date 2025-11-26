@@ -1,17 +1,9 @@
 import { Chess } from "chess.js";
-import {
-    Chessboard,
-    FEN,
-    INPUT_EVENT_TYPE,
-    COLOR,
-    BORDER_TYPE,
-    MARKER_TYPE,
-    Markers,
-    ARROW_TYPE,
-    Arrows,
-    RightClickAnnotator,
-    PromotionDialog
-} from "cm-chessboard";
+import { Chessboard, FEN, INPUT_EVENT_TYPE, COLOR, BORDER_TYPE } from "cm-chessboard";
+import { MARKER_TYPE, Markers } from "cm-chessboard/src/extensions/markers/Markers.js";
+import { ARROW_TYPE, Arrows } from "cm-chessboard/src/extensions/arrows/Arrows.js";
+import { RightClickAnnotator } from "cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js";
+import { PromotionDialog } from "cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js";
 import { PieceSelectionDialog, PIECE_SELECTION_DIALOG_RESULT_TYPE } from "./extensions/PieceSelectionDialog.js";
 
 export class EGChess {
@@ -24,7 +16,7 @@ export class EGChess {
         this.options = options;
         this.listeners = {};
 
-        const finalConfig = { ...options };
+        const assetsUrl = "https://cdn.jsdelivr.net/npm/cm-chessboard@8.10.1/assets/";
 
         let initialFen = options.fen;
 
@@ -49,7 +41,7 @@ export class EGChess {
             this.board = new Chessboard(container, {
                 position: initialFen,
                 responsive: true,
-                assetsCache: false,
+                assetsUrl: assetsUrl,
                 style: {
                     cssClass: "default",
                     showCoordinates: true,
@@ -73,6 +65,7 @@ export class EGChess {
             this.board = new Chessboard(container, {
                 position: initialFen,
                 responsive: true,
+                assetsUrl: assetsUrl,
                 extensions: [
                     { class: Arrows },
                     { class: Markers, props: { autoMarkers: MARKER_TYPE.frame } },

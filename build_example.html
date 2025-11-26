@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EGChess "Build" Mode Example</title>
-    <link rel="stylesheet" href="https://esm.sh/cm-chessboard@8.5.1/styles/cm-chessboard.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cm-chessboard@8.10.1/assets/chessboard.css">
     <link rel="stylesheet" href="dist/eg-chess.css">
     <style>
         body { font-family: sans-serif; }
@@ -19,8 +19,9 @@
     <script type="importmap">
     {
       "imports": {
-        "cm-chessboard": "https://esm.sh/cm-chessboard@8.5.1",
-        "chess.js": "https://esm.sh/chess.js@1.0.0-beta.7"
+        "cm-chessboard": "https://cdn.jsdelivr.net/npm/cm-chessboard@8.10.1/src/Chessboard.js",
+        "cm-chessboard/": "https://cdn.jsdelivr.net/npm/cm-chessboard@8.10.1/",
+        "chess.js": "https://cdn.jsdelivr.net/npm/chess.js@1.4.0/+esm"
       }
     }
     </script>
