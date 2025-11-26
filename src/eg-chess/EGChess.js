@@ -1,9 +1,17 @@
-import { Chess } from "../vendor/chess.js/chess.js";
-import { Chessboard, FEN, INPUT_EVENT_TYPE, COLOR, BORDER_TYPE } from "../vendor/cm-chessboard/src/Chessboard.js";
-import { MARKER_TYPE, Markers } from "../vendor/cm-chessboard/src/extensions/markers/Markers.js";
-import { ARROW_TYPE, Arrows } from "../vendor/cm-chessboard/src/extensions/arrows/Arrows.js";
-import { RightClickAnnotator } from "../vendor/cm-chessboard/src/extensions/right-click-annotator/RightClickAnnotator.js";
-import { PromotionDialog } from "../vendor/cm-chessboard/src/extensions/promotion-dialog/PromotionDialog.js";
+import { Chess } from "chess.js";
+import {
+    Chessboard,
+    FEN,
+    INPUT_EVENT_TYPE,
+    COLOR,
+    BORDER_TYPE,
+    MARKER_TYPE,
+    Markers,
+    ARROW_TYPE,
+    Arrows,
+    RightClickAnnotator,
+    PromotionDialog
+} from "cm-chessboard";
 import { PieceSelectionDialog, PIECE_SELECTION_DIALOG_RESULT_TYPE } from "./extensions/PieceSelectionDialog.js";
 
 export class EGChess {
@@ -16,10 +24,7 @@ export class EGChess {
         this.options = options;
         this.listeners = {};
 
-        const defaultConfig = {
-            assetsUrl: './dist/assets/'
-        };
-        const finalConfig = { ...defaultConfig, ...options };
+        const finalConfig = { ...options };
 
         let initialFen = options.fen;
 
@@ -44,7 +49,6 @@ export class EGChess {
             this.board = new Chessboard(container, {
                 position: initialFen,
                 responsive: true,
-                assetsUrl: finalConfig.assetsUrl,
                 assetsCache: false,
                 style: {
                     cssClass: "default",
@@ -69,7 +73,6 @@ export class EGChess {
             this.board = new Chessboard(container, {
                 position: initialFen,
                 responsive: true,
-                assetsUrl: finalConfig.assetsUrl,
                 extensions: [
                     { class: Arrows },
                     { class: Markers, props: { autoMarkers: MARKER_TYPE.frame } },

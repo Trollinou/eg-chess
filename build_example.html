@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EGChess "Build" Mode Example</title>
+    <link rel="stylesheet" href="https://esm.sh/cm-chessboard@8.5.1/styles/cm-chessboard.css">
     <link rel="stylesheet" href="dist/eg-chess.css">
     <style>
         body { font-family: sans-serif; }
@@ -15,6 +16,14 @@
         #marker-container { margin-top: 10px; }
         #marker-input { width: 100%; box-sizing: border-box; }
     </style>
+    <script type="importmap">
+    {
+      "imports": {
+        "cm-chessboard": "https://esm.sh/cm-chessboard@8.5.1",
+        "chess.js": "https://esm.sh/chess.js@1.0.0-beta.7"
+      }
+    }
+    </script>
 </head>
 <body>
     <h1>EGChess "Build" Mode Example</h1>

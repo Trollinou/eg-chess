@@ -4,10 +4,9 @@
   "description": "A Javascript library for chess.",
   "main": "dist/eg-chess.js",
   "scripts": {
-    "build": "npm run build:js && npm run build:css && npm run copy:assets",
-    "build:js": "esbuild src/eg-chess/EGChess.js --bundle --outfile=dist/eg-chess.js --format=esm",
-    "build:css": "sass --quiet-deps --silence-deprecation=import --load-path=src/vendor src/scss/eg-chess.scss dist/eg-chess.css",
-    "copy:assets": "npx cpx2 \"src/vendor/cm-chessboard/assets/**/*\" dist/assets",
+    "build": "npm run build:js && npm run build:css",
+    "build:js": "esbuild src/eg-chess/EGChess.js --bundle --outfile=dist/eg-chess.js --format=esm --external:cm-chessboard --external:chess.js",
+    "build:css": "sass --quiet-deps --silence-deprecation=import src/scss/eg-chess.scss dist/eg-chess.css",
     "start": "http-server -c-1"
   },
   "keywords": [

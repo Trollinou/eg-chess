@@ -4,7 +4,16 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>eg-chess - Exemple basique</title>
+  <link rel="stylesheet" href="https://esm.sh/cm-chessboard@8.5.1/styles/cm-chessboard.css">
   <link rel="stylesheet" href="../dist/eg-chess.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "cm-chessboard": "https://esm.sh/cm-chessboard@8.5.1",
+      "chess.js": "https://esm.sh/chess.js@1.0.0-beta.7"
+    }
+  }
+  </script>
 </head>
 <body>
   <div class="eg-chess-container">
@@ -26,10 +35,8 @@
     import { EGChess } from '../dist/eg-chess.js';
 
     const boardContainer = document.getElementById('board');
-    // We need to provide the 'match' mode and the correct assetsUrl
-    const chess = new EGChess(boardContainer, 'match', {
-        assetsUrl: '../dist/assets/'
-    });
+    // We provide the 'match' mode
+    const chess = new EGChess(boardContainer, 'match');
     window.egChess = chess; // Expose for easier debugging
 
     const statusEl = document.getElementById('status');
@@ -67,7 +74,7 @@
 
     chess.on('onGameOver', () => {
         console.log('Partie terminée!');
-        // We can add a more specific message if needed by checking the game state
+        // We can add a more specific message if needed by a check on the game state
         if (chess.chess.isCheckmate()) {
             alert('Échec et mat!');
         } else {

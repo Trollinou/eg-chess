@@ -4,18 +4,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>EGChess Test</title>
+    <link rel="stylesheet" href="https://esm.sh/cm-chessboard@8.5.1/styles/cm-chessboard.css">
     <link rel="stylesheet" href="dist/eg-chess.css">
+    <script type="importmap">
+    {
+      "imports": {
+        "cm-chessboard": "https://esm.sh/cm-chessboard@8.5.1",
+        "chess.js": "https://esm.sh/chess.js@1.0.0-beta.7"
+      }
+    }
+    </script>
 </head>
 <body>
     <div id="board-container" style="width: 400px; height: 400px;"></div>
     <script type="module">
         import { EGChess } from './dist/eg-chess.js';
         const boardContainer = document.getElementById('board-container');
-        const egChess = new EGChess(boardContainer);
+        const egChess = new EGChess(boardContainer, 'match');
         window.egChess = egChess; // Expose for testing
         egChess.on('onMove', (fen) => {
             console.log('onMove event fired with FEN:', fen);
         });
-    </script>
-</body>
+    </script></body>
 </html>
